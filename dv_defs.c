@@ -1,10 +1,8 @@
-#include <raylib.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "utils.h"
+#include <raylib.h>
 
 void js_fill_circ(float x, float y, float radius, uint32_t c) {
   DrawCircle((int32_t)x, (int32_t)y, radius, u32_to_color(c));
@@ -36,6 +34,8 @@ void js_fill_string(float x,
                     size_t len,
                     uint32_t c,
                     float size) {
-  s[len] = '\0';
-  DrawText(s, (int32_t)x, (int32_t)y, (int32_t)size, u32_to_color(c));
+  char* buff = calloc(len, 1);
+  memcpy(buff, s, len);
+  DrawText(buff, (int32_t)x, (int32_t)y, (int32_t)size, u32_to_color(c));
+  free(buff);
 }
