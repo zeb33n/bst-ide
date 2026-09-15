@@ -12,6 +12,7 @@
 
 Color u32_to_color(uint32_t i);
 char* string_format_dynalloc(const char* templ, const char* s);
+char** string_split_dynalloc(const char* str, char c);
 bool string_ends_with(const char* s1, const char* s2);
 void dynstring_concat(char* dyn, const char* s);
 

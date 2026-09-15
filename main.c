@@ -6,16 +6,12 @@
 char* PROJECT_PATH = NULL;
 
 #include "load.h"
-#include "utils.h"
 
 // TODO load project using bst show --deps none --format %{deps}
 
 int main(int argc, char** argv) {
-  PROJECT_PATH = "../cop/";
-  char** element_paths = get_element_paths_dynalloc(".");
-  for dyn_iter(element_paths, i) {
-    printf("%s\n", element_paths[i]);
-  }
+  PROJECT_PATH = ".";
+  load_elements();
 
   char* src = LoadFileText(argv[1]);
 

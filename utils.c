@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "utils.h"
 
@@ -30,6 +31,20 @@ char* string_format_dynalloc(const char* templ, const char* s) {
   dyn_set_capacity(out, n);
   sprintf(out, templ, s);
   ((ArrayData*)out - 1)->count = strlen(out) + 1;
+  return out;
+}
+
+char** string_split_dynalloc(const char* str, char c) {
+  char** out = NULL;
+  for (int i = 0; str[i] != '\0'; i++) {
+    char* part = NULL;
+    for (; (str[i] != c) && (str[i] != '\0'); i++) {
+      dyn_append(part, str[i]);
+    }
+    if (part == NULL) continue;
+    dyn_append(part, '\0');
+    dyn_append(out, part);
+  }
   return out;
 }
 
