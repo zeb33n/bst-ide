@@ -1,28 +1,64 @@
+#include <dirent.h>
+#include <glob.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "load.h"
 #include "utils.h"
-#include <glob.h>
 
+char** get_element_paths_dynalloc(const char* dir_path) {
+  char* elements_path = string_format_dynalloc("%s/elements/", PROJECT_PATH);
+  dynstring_concat(elements_path, dir_path);
+  char** out = NULL;
+  DIR* d = NULL;
+  if ((d = opendir(elements_path)) == NULL) {
+    printf("%s\n", elements_path);
+    perror("%s");
+    exit(1);
+  }
+  struct dirent* entry;
+  while ((entry = readdir(d)) != NULL) {
+    char* element_path = NULL;
+    dyn_init_if_null(element_path);
+    dynstring_concat(element_path, dir_path);
+    dynstring_concat(element_path, "/");
+    dynstring_concat(element_path, entry->d_name);
+    if (entry->d_type == DT_REG && string_ends_with(entry->d_name, ".bst")) {
+      dyn_append(out, element_path);
+    }
+    if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 &&
+        strcmp(entry->d_name, "..") != 0) {
+      char** element_paths = get_element_paths_dynalloc(element_path);
+      dyn_free(element_path);
+      if (element_paths == NULL) {
+        continue;
+      }
+      for dyn_iter(element_paths, i) {
+        dyn_append(out, element_paths[i]);
+      }
+      dyn_free(element_paths);
+    }
+  }
+  closedir(d);
+  dyn_free(elements_path);
+  return out;
+}
 
 Element* load_element_alloc(const char* path) {
-  char* out_buff = NULL;
-  
-  char cmd_buff[256];
-  sprintf(cmd_buff, "bst show --deps none --format \%{deps} %s", path);
-  FILE* stream = popen(cmd_buff, "r");
+  char* cmd =
+      string_format_dynalloc("bst show --deps none --format \%{deps} %s", path);
+  FILE* stream = popen(cmd, "r");
   if (stream == NULL) {
     perror("");
+    exit(1);
   }
+  dyn_free(cmd);
 
-  while (1) {
-    int32_t c = fgetc(stream);
-    if (c == EOF) {
-      break;
-    }
+  int32_t c;
+  char* out_buff = NULL;
+  while ((c = fgetc(stream)) != EOF) {
     dyn_append(out_buff, (char)c);
   }
   dyn_append(out_buff, '\0');
-
   printf("%s\n", out_buff);
 }
