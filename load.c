@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include "load.h"
 #include "utils.h"
+#include <glob.h>
+
 
 Element* load_element_alloc(const char* path) {
-  printf("yolo");
-  DynStr out_buff;
-  dyn_init(out_buff);
+  char* out_buff = NULL;
   
   char cmd_buff[256];
   sprintf(cmd_buff, "bst show --deps none --format \%{deps} %s", path);
@@ -23,5 +23,6 @@ Element* load_element_alloc(const char* path) {
     dyn_append(out_buff, (char)c);
   }
   dyn_append(out_buff, '\0');
-  printf("%s", out_buff.values);
+
+  printf("%s\n", out_buff);
 }

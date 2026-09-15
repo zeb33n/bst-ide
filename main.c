@@ -1,19 +1,15 @@
 #include <dag_viewer.h>
 #include <raylib.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include "load.h"
 
 // TODO load project using bst show --deps none --format %{deps}
 
 int main(int argc, char** argv) {
-  printf("1\n");
   load_element_alloc("track.bst");
 
   char* src = LoadFileText(argv[1]);
-
-  printf("source %s\n", src);
 
   const uint32_t w = 1800;
   const uint32_t h = 900;

@@ -8,57 +8,46 @@
 
 Color u32_to_color(uint32_t i);
 
-#define dyn_append(arr, v)                                                  \
-  do {                                                                      \
-    if (arr.count >= arr.capacity) {                                        \
-      arr.capacity *= 2;                                                    \
-      arr.values = realloc(arr.values, sizeof(*arr.values) * arr.capacity); \
-    }                                                                       \
-    arr.values[arr.count++] = v;                                            \
-  } while (0)
-
-#define dyn_init_default(arr)                                \
-  do {                                                       \
-    arr.count = 0;                                           \
-    arr.capacity = 512 / sizeof(*arr.values);                \
-    arr.values = malloc(arr.capacity * sizeof(*arr.values)); \
-  } while (0)
-
-#define dyn_init_N(arr, N)                                   \
-  do {                                                       \
-    arr.count = 0;                                           \
-    arr.capacity = N;                                        \
-    arr.values = malloc(arr.capacity * sizeof(*arr.values)); \
-  } while (0)
-
-#define dyn_rm(arr, index)                        \
-  do {                                            \
-    for (int i = index; i < arr.count - 1; i++) { \
-      arr.values[i] = arr.values[i + 1];          \
-    }                                             \
-    arr.count--;                                  \
-  } while (0)
-
-#define _dyn_init_get(_1, _2, NAME, ...) NAME
-#define dyn_init(...) \
-  _dyn_init_get(__VA_ARGS__, dyn_init_N, dyn_init_default)(__VA_ARGS__)
-
-#define dyn_clear(arr) \
-  do {                 \
-    free(arr.values);  \
-    dyn_init(arr);     \
-  } while (0)
-
-#define dyn_copy_from(arr, N, buff)                     \
-  do {                                                  \
-    arr.count = N;                                      \
-    memcopy(arr.values, buff, N * sizeof(*arr.values)); \
-  } while (0)
-
 typedef struct {
   size_t count;
   size_t capacity;
-  char* values;
-} DynStr;
+} ArrayData;
+
+#define dyn_init_if_null(arr)                                                \
+  do {                                                                       \
+    if (arr == NULL) {                                                       \
+      size_t capacity = 512 / sizeof(*arr);                                  \
+      ArrayData* data = malloc(capacity * sizeof(*arr) + sizeof(ArrayData)); \
+      data->count = 0;                                                       \
+      data->capacity = capacity;                                             \
+      arr = (void*)(data + 1);                                               \
+    }                                                                        \
+  } while (0)
+
+#define dyn_append(arr, v)                                                     \
+  do {                                                                         \
+    dyn_init_if_null(arr);                                                     \
+    ArrayData* data = (ArrayData*)arr - 1;                                     \
+    if (data->count >= data->capacity) {                                       \
+      data->capacity *= 2;                                                     \
+      data = realloc(data, sizeof(*arr) * data->capacity + sizeof(ArrayData)); \
+      arr = (void*)(data + 1);                                                 \
+    }                                                                          \
+    arr[data->count++] = v;                                                    \
+  } while (0)
+
+#define dyn_rm(arr, index)                          \
+  do {                                              \
+    ArrayData* data = (ArrayData*)arr - 1;          \
+    for (int i = index; i < data->count - 1; i++) { \
+      arr[i] = arr[i + 1];                          \
+    }                                               \
+    data->count--;                                  \
+  } while (0)
+
+#define dyn_free(arr)          \
+  do {                         \
+    free((ArrayData*)arr - 1); \
+  } while (0)
 
 #endif
