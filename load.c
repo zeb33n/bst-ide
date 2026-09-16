@@ -102,6 +102,7 @@ void load_element(const char* bst_path) {
   // remove the ./ at the start of the path string
   size_t handle = elements_insert_and_get_index(bst_path + 2);
   bool done = false;
+  bool mapping = false;
   BstKey current_key = NONE;
   char* value;
 
@@ -113,6 +114,7 @@ void load_element(const char* bst_path) {
 
     switch (event.type) {
       case YAML_SCALAR_EVENT:
+        if (mapping) break;
         value = (char*)event.data.scalar.value;
 
         // skip buildstream yaml directives
@@ -131,6 +133,17 @@ void load_element(const char* bst_path) {
         }
         if (strcmp(value, "runtime-depends") == 0) {
           current_key = RUN_DEPENDS;
+        }
+        break;
+      // TODO actually parse filename: tags
+      case YAML_MAPPING_START_EVENT:
+        if (current_key != NONE) {
+          mapping = true;
+        }
+        break;
+      case YAML_MAPPING_END_EVENT:
+        if (current_key != NONE) {
+          mapping = false;
         }
         break;
       case YAML_SEQUENCE_END_EVENT:
