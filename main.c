@@ -2,6 +2,7 @@
 #include <dag_viewer.h>
 #include <raylib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 char* PROJECT_PATH = NULL;
@@ -11,6 +12,11 @@ char* PROJECT_PATH = NULL;
 // TODO load project using bst show --deps none --format %{deps}
 
 int main(int argc, char** argv) {
+  if (argc == 1) {
+    printf("%s Expected A Path to a Buildstream Project\n", ERROR_MSG);
+    exit(1);
+  }
+
   PROJECT_PATH = string_format_dynalloc("%s", argv[1]);
   load_elements();
 
@@ -24,6 +30,12 @@ int main(int argc, char** argv) {
   InitWindow(w, h, "bst-ide");
   SetTargetFPS(60);
   dag_viewer_init((float)w, (float)h, (uint8_t*)src, strlen(src));
+
+  if (argc > 2) {
+    printf("%s\n", argv[2]);
+    dag_viewer_highlight_bicone((uint8_t*)argv[2], strlen(argv[2]));
+  }
+
   while (!WindowShouldClose()) {
     mouse_click_pos = GetMousePosition();
     if (IsMouseButtonPressed(0)) {
