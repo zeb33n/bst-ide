@@ -13,4 +13,5 @@ typedef struct Element {
 extern char* PROJECT_PATH;
 
 void load_elements();
+char* get_dot_alloc();
 #endif

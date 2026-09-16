@@ -1,4 +1,6 @@
 #include <dirent.h>
+#include <graphviz/cgraph.h>
+#include <graphviz/gvc.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -114,13 +116,15 @@ void load_element(const char* bst_path) {
 
     switch (event.type) {
       case YAML_SCALAR_EVENT:
-        if (mapping) break;
+        if (mapping)
+          break;
         value = (char*)event.data.scalar.value;
 
         // skip buildstream yaml directives
-        if (strcmp(value, "(>)") == 0) break;
+        if (strcmp(value, "(>)") == 0)
+          break;
 
-        if (current_key == BUILD_DEPENDS || current_key == RUN_DEPENDS || current_key == DEPENDS) {
+        if (current_key != NONE) {
           size_t dep_handle = elements_insert_and_get_index(value);
           // TODO append based on on current_key
           dyn_append(ELEMENTS[handle].build_dep_handles, dep_handle);
@@ -168,12 +172,40 @@ void load_elements() {
     dyn_iter(element_paths, i) {
       load_element(element_paths[i]);
     }
-  for dyn_iter(ELEMENTS, i) {
-    printf("%s\n", ELEMENTS[i].path);
-    if (ELEMENTS[i].build_dep_handles == NULL) continue;
-    for dyn_iter(ELEMENTS[i].build_dep_handles, j) {
-      printf("    %s\n", ELEMENTS[ELEMENTS[i].build_dep_handles[j]].path);
-    }
-  }
   dyn_free(element_paths);
+}
+
+// TODO there is a bug in here somewhere
+// looks like dependencies aren't what they should be
+char* get_dot_alloc() {
+  GVC_t* gvc = gvContext();
+  Agraph_t* graph = agopen(0, Agdirected, 0);
+  agsafeset(graph, "rankdir", "LR", "");
+  agsafeset(graph, "splines", "polyline", "");
+  Agnode_t** nodes = NULL;
+  for
+    dyn_iter(ELEMENTS, i) {
+      dyn_append(nodes, agnode(graph, (char*)ELEMENTS[i].path, 1));
+    }
+  for
+    dyn_iter(ELEMENTS, parent_handle) {
+      size_t* child_handles = ELEMENTS[parent_handle].build_dep_handles;
+      if (child_handles == NULL)
+        continue;
+    for
+      dyn_iter(child_handles, j) {
+        (void)agedge(graph, nodes[parent_handle], nodes[child_handles[j]], 0, 1);
+      }
+    }
+
+  gvLayout(gvc, graph, "dot");
+  size_t l;
+  char* out;
+  gvRenderData(gvc, graph, "dot", &out, &l);
+
+  dyn_free(nodes);
+  gvFreeLayout(gvc, graph);
+  agclose(graph);
+  
+  return out;
 }
