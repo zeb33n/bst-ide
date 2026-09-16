@@ -1,3 +1,4 @@
+#include "utils.h"
 #include <dag_viewer.h>
 #include <raylib.h>
 #include <stdint.h>
@@ -10,10 +11,10 @@ char* PROJECT_PATH = NULL;
 // TODO load project using bst show --deps none --format %{deps}
 
 int main(int argc, char** argv) {
-  PROJECT_PATH = ".";
+  PROJECT_PATH = string_format_dynalloc("%s", argv[1]);
   load_elements();
 
-  char* src = LoadFileText(argv[1]);
+  char* src = LoadFileText(argv[2]);
 
   const uint32_t w = 1800;
   const uint32_t h = 900;

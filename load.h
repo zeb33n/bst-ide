@@ -1,15 +1,14 @@
 #ifndef BST_IDE_LOAD
 #define BST_IDE_LOAD
 
-typedef struct Element {
-  char* name;
-  struct Element** deps;
-} Element;
+#include <stddef.h>
 
-typedef struct {
-  Element* next;
-  Element* prev;
-} Elements;
+typedef struct Element {
+  const char* path;
+  size_t* dep_handles;
+  size_t* run_dep_handles;
+  size_t* build_dep_handles;
+} Element;
 
 extern char* PROJECT_PATH;
 

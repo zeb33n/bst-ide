@@ -1,8 +1,8 @@
 CSRCS := $(shell find ./ -name "*.c")
 
 debug:
-	gcc -g -ldag_viewer -lraylib $(CSRCS) -o bstide
-	./bstide ../sbomber/site/dag_viewer_assets/processed_sbom.dot
+	gcc -g -ldag_viewer -lraylib -lyaml $(CSRCS) -o bstide
+	./bstide ../cop/
 
 clean:
 	rm bstide

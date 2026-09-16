@@ -80,6 +80,8 @@ typedef struct {
 
 #define dyn_free(arr) free((ArrayData*)arr - 1)
 
+#define dyn_len(arr) ((ArrayData*)arr - 1)->count
+
 #define dyn_iter(arr, i) (size_t i = 0; i < ((ArrayData*)arr - 1)->count; i++)
 
 #endif

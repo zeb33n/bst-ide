@@ -1,10 +1,14 @@
 #include <dirent.h>
-#include <glob.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <yaml.h>
 #include "load.h"
 #include "utils.h"
+
+Element* ELEMENTS = NULL;
 
 char** get_element_paths_dynalloc(const char* dir_path) {
   char** out = NULL;
@@ -38,9 +42,10 @@ char** get_element_paths_dynalloc(const char* dir_path) {
       if (element_paths == NULL) {
         continue;
       }
-      for dyn_iter(element_paths, i) {
-        dyn_append(out, element_paths[i]);
-      }
+      for
+        dyn_iter(element_paths, i) {
+          dyn_append(out, element_paths[i]);
+        }
       dyn_free(element_paths);
     }
   }
@@ -50,37 +55,112 @@ char** get_element_paths_dynalloc(const char* dir_path) {
   return out;
 }
 
-// TODO this takes a while to run we should cache this somehow.
-// or just parse the yaml directly? 
-void load_element_alloc(const char* path) {
-  char* cmd =
-      string_format_dynalloc("bst show --deps none --format \%{deps} %s", path);
-  FILE* stream = popen(cmd, "r");
-  if (stream == NULL) {
+size_t elements_insert_and_get_index(const char* path) {
+  for
+    dyn_iter(ELEMENTS, i) {
+      if (strcmp(ELEMENTS[i].path, path) == 0) {
+        return i;
+      }
+    }
+  Element e;
+  e.path = path;
+  e.build_dep_handles = NULL;
+  e.run_dep_handles = NULL;
+  e.dep_handles = NULL;
+  dyn_append(ELEMENTS, e);
+  return dyn_len(ELEMENTS) - 1;
+}
+
+typedef enum {
+  BUILD_DEPENDS,
+  RUN_DEPENDS,
+  DEPENDS,
+  NONE,
+} BstKey;
+
+void load_element(const char* bst_path) {
+  char* path = string_format_dynalloc("%s/elements/", PROJECT_PATH);
+  dynstring_concat(path, bst_path);
+
+  FILE* f = fopen(path, "r");
+
+  if (f == NULL) {
     perror(ERROR_MSG);
     exit(1);
   }
-  dyn_free(cmd);
 
-  int32_t c;
-  char* stdout = NULL;
-  while ((c = fgetc(stream)) != EOF) {
-    dyn_append(stdout, (char)c);
+  yaml_parser_t parser;
+  yaml_event_t event;
+
+  if (!yaml_parser_initialize(&parser)) {
+    fclose(f);
+    exit(1);
   }
-  dyn_append(stdout, '\0');
-  char** dependencies = string_split_dynalloc(stdout, '\n');
-  if (dependencies == NULL) {
-    return;
+
+  yaml_parser_set_input_file(&parser, f);
+
+  // remove the ./ at the start of the path string
+  size_t handle = elements_insert_and_get_index(bst_path + 2);
+  bool done = false;
+  BstKey current_key = NONE;
+  char* value;
+
+  while (!done) {
+    if (!yaml_parser_parse(&parser, &event)) {
+      printf("%s YAML parse error", ERROR_MSG);
+      exit(1);
+    }
+
+    switch (event.type) {
+      case YAML_SCALAR_EVENT:
+        value = (char*)event.data.scalar.value;
+
+        // skip buildstream yaml directives
+        if (strcmp(value, "(>)") == 0) break;
+
+        if (current_key == BUILD_DEPENDS || current_key == RUN_DEPENDS || current_key == DEPENDS) {
+          size_t dep_handle = elements_insert_and_get_index(value);
+          // TODO append based on on current_key
+          dyn_append(ELEMENTS[handle].build_dep_handles, dep_handle);
+        }
+        if (strcmp(value, "depends") == 0) {
+          current_key = DEPENDS;
+        }
+        if (strcmp(value, "build-depends") == 0) {
+          current_key = BUILD_DEPENDS;
+        }
+        if (strcmp(value, "runtime-depends") == 0) {
+          current_key = RUN_DEPENDS;
+        }
+        break;
+      case YAML_SEQUENCE_END_EVENT:
+        current_key = NONE;
+        break;
+      case YAML_STREAM_END_EVENT:
+        done = true;
+        break;
+      default:
+        break;
+        yaml_event_delete(&event);
+    }
   }
-  for dyn_iter(dependencies, i) {
-    printf("%s\n", dependencies[i]);
-  }
+  yaml_parser_delete(&parser);
+  fclose(f);
 }
 
 void load_elements() {
+  dyn_init_if_null(ELEMENTS);
   char** element_paths = get_element_paths_dynalloc(".");
-  for dyn_iter(element_paths, i) {
-    load_element_alloc(element_paths[i]);
+  for
+    dyn_iter(element_paths, i) {
+      load_element(element_paths[i]);
+    }
+  for dyn_iter(ELEMENTS, i) {
+    printf("%s\n", ELEMENTS[i].path);
+    if (ELEMENTS[i].build_dep_handles == NULL) continue;
+    for dyn_iter(ELEMENTS[i].build_dep_handles, j) {
+      printf("    %s\n", ELEMENTS[ELEMENTS[i].build_dep_handles[j]].path);
+    }
   }
   dyn_free(element_paths);
 }
