@@ -194,7 +194,8 @@ char* get_dot_alloc() {
         continue;
     for
       dyn_iter(child_handles, j) {
-        (void)agedge(graph, nodes[parent_handle], nodes[child_handles[j]], 0, 1);
+        (void)agedge(graph, nodes[parent_handle], nodes[child_handles[j]], 0,
+                     1);
       }
     }
 
@@ -206,6 +207,6 @@ char* get_dot_alloc() {
   dyn_free(nodes);
   gvFreeLayout(gvc, graph);
   agclose(graph);
-  
+
   return out;
 }
