@@ -1,6 +1,5 @@
+#include <dag_viewer.h>
 #include <dirent.h>
-#include <graphviz/cgraph.h>
-#include <graphviz/gvc.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -175,17 +174,13 @@ void load_elements() {
   dyn_free(element_paths);
 }
 
-// TODO there is a bug in here somewhere
-// looks like dependencies aren't what they should be
-char* get_dot_alloc() {
-  GVC_t* gvc = gvContext();
-  Agraph_t* graph = agopen(0, Agdirected, 0);
-  agsafeset(graph, "rankdir", "LR", "");
-  agsafeset(graph, "splines", "polyline", "");
-  Agnode_t** nodes = NULL;
+void create_graph() {
+  size_t* nodes = NULL;
   for
     dyn_iter(ELEMENTS, i) {
-      dyn_append(nodes, agnode(graph, (char*)ELEMENTS[i].path, 1));
+      const char* bstpath = ELEMENTS[i].path;
+      dyn_append(nodes,
+                 dag_viewer_add_node((uint8_t*)bstpath, strlen(bstpath)));
     }
   for
     dyn_iter(ELEMENTS, parent_handle) {
@@ -194,19 +189,8 @@ char* get_dot_alloc() {
         continue;
     for
       dyn_iter(child_handles, j) {
-        (void)agedge(graph, nodes[parent_handle], nodes[child_handles[j]], 0,
-                     1);
+        dag_viewer_add_edge(nodes[parent_handle], nodes[child_handles[j]]);
       }
     }
-
-  gvLayout(gvc, graph, "dot");
-  size_t l;
-  char* out;
-  gvRenderData(gvc, graph, "dot", &out, &l);
-
-  dyn_free(nodes);
-  gvFreeLayout(gvc, graph);
-  agclose(graph);
-
-  return out;
+  dag_viewer_layout();
 }

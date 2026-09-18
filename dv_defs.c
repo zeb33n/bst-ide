@@ -11,7 +11,7 @@ void js_fill_circ(float x, float y, float radius, uint32_t c) {
 void js_follow_link() {}
 
 void js_log(const uint8_t* ptr, size_t len) {
-  printf("%s", ptr);
+  printf("%s\n", ptr);
 }
 
 void js_fill_rect(float x, float y, float w, float h, uint32_t c) {

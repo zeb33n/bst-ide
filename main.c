@@ -20,7 +20,6 @@ int main(int argc, char** argv) {
   PROJECT_PATH = string_format_dynalloc("%s", argv[1]);
   load_elements();
 
-  char* src = get_dot_alloc();
 
   const uint32_t w = 1800;
   const uint32_t h = 900;
@@ -29,7 +28,10 @@ int main(int argc, char** argv) {
 
   InitWindow(w, h, "bst-ide");
   SetTargetFPS(60);
-  dag_viewer_init((float)w, (float)h, (uint8_t*)src, strlen(src));
+
+  dag_viewer_new((float)w, (float)h);
+  create_graph();
+  dag_viewer_draw();
 
   if (argc > 2) {
     printf("%s\n", argv[2]);
