@@ -26,11 +26,12 @@ int main(int argc, char** argv) {
   bool mouse_is_down = false;
   Vector2 mouse_click_pos = {0, 0};
 
+  dag_viewer_new((float)w, (float)h);
+  create_graph();
+
   InitWindow(w, h, "bst-ide");
   SetTargetFPS(60);
 
-  dag_viewer_new((float)w, (float)h);
-  create_graph();
   dag_viewer_draw();
 
   if (argc > 2) {
