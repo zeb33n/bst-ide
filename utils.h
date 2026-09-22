@@ -21,14 +21,13 @@ typedef struct {
   size_t capacity;
 } ArrayData;
 
-#define dyn_make(arr, n)                                                   \
-  do {                                                                     \
-    size_t capacity = n;                                                   \
-    ArrayData* data = malloc(capacity * sizeof(*arr) + sizeof(ArrayData)); \
-    data->count = 0;                                                       \
-    data->capacity = capacity;                                             \
-    memcpy(data + 1, arr, n * sizeof(*arr));                               \
-    arr = (void*)(data + 1);                                               \
+#define dyn_make(arr, n)                                            \
+  do {                                                              \
+    ArrayData* data = malloc(n * sizeof(*arr) + sizeof(ArrayData)); \
+    data->count = n;                                                \
+    data->capacity = n;                                             \
+    memcpy(data + 1, arr, n);                                       \
+    arr = (void*)(data + 1);                                        \
   } while (0)
 
 #define dyn_init_if_null(arr)                                                \

@@ -20,7 +20,6 @@ int main(int argc, char** argv) {
   PROJECT_PATH = string_format_dynalloc("%s", argv[1]);
   load_elements();
 
-
   const uint32_t w = 1800;
   const uint32_t h = 900;
   bool mouse_is_down = false;

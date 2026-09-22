@@ -34,8 +34,8 @@ void js_fill_string(float x,
                     size_t len,
                     uint32_t c,
                     float size) {
-  char* buff = calloc(len, 1);
-  memcpy(buff, s, len);
-  DrawText(buff, (int32_t)x, (int32_t)y, (int32_t)size, u32_to_color(c));
-  free(buff);
+  dyn_make(s, len);
+  dyn_append(s, '\0');
+  DrawText(s, (int32_t)x, (int32_t)y, (int32_t)size, u32_to_color(c));
+  dyn_free(s);
 }

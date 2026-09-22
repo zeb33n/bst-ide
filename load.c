@@ -192,6 +192,7 @@ void create_graph() {
         dag_viewer_add_edge(nodes[parent_handle], nodes[child_handles[j]]);
       }
     }
+  dyn_free(nodes);
   printf("computing layout\n");
   dag_viewer_layout();
 }
