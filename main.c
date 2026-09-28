@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
   dag_viewer_new((float)w, (float)h);
   create_graph();
 
+  SetConfigFlags(FLAG_MSAA_4X_HINT);
   InitWindow(w, h, "bst-ide");
   SetTargetFPS(60);
 
